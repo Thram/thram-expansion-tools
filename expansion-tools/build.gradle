@@ -21,5 +21,5 @@ android {
 dependencies {
     compile project(':downloader')
     compile project(':zip')
-    compile 'com.android.support:apcompat-v7:23.1.1'
+    compile 'com.android.support:appcompat-v7:23.1.1'
 }
