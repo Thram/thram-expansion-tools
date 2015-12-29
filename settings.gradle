@@ -1,0 +1,4 @@
+include ':app', ':expansion-tools'
+include ':license'
+include ':zip'
+include ':downloader'
