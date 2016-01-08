@@ -10,16 +10,12 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        resValue "integer", "obb_version", "1"
+        resValue "integer", "obb_size", "2899036"
     }
 
     buildTypes {
-        debug {
-            resValue "integer", "obb_version", "1"
-            resValue "integer", "obb_size", "2899036"
-        }
         release {
-            resValue "int", "obb_version", "1"
-            resValue "int", "obb_size", "2899036"
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

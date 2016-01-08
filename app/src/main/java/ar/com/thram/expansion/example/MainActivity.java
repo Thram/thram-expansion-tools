@@ -24,10 +24,9 @@ public class MainActivity extends AppCompatActivity {
         expansionDownloader.setOnCompleteListener(new Runnable() {
             @Override
             public void run() {
-                ExpansionFile.Loader loader = expansionFile.loader(activity);
                 Log.e("Downloader", "Completed!");
                 image = (ImageView) findViewById(R.id.image_test);
-                image.setImageBitmap(loader.bitmap("after.png"));
+                image.setImageBitmap(expansionFile.getBitmap("after.png"));
             }
         });
         expansionDownloader.setOnProgressListener(new Runnable() {

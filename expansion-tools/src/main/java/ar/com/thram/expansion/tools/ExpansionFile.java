@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
@@ -33,10 +34,13 @@ import java.util.List;
  */
 public class ExpansionFile {
     //    private final static String EXP_PATH = "/Android/obb/";
+    private final int patchVersion;
     private final int version;
     private final int size;
     private final boolean isMain;
+    private Context context;
     private static List<XAPKFile> xAPKS = new ArrayList<>();
+    private ZipResourceFile expansionFile = null;
 
     /**
      * This is a little helper class that demonstrates simple testing of an
@@ -64,17 +68,73 @@ public class ExpansionFile {
         this.version = version;
         this.size = size;
         this.isMain = isMain;
+        patchVersion = 0;
+    }
+
+    public ExpansionFile(int version, int size, int patchVersion) {
+        this.version = version;
+        this.size = size;
+        this.patchVersion = patchVersion;
+        this.isMain = false;
     }
 
 
     public Downloader downloader(Activity activity) {
+        this.context = activity.getApplicationContext();
         return new Downloader(activity, this.version, this.size, this.isMain);
     }
 
-    public Loader loader(Activity activity) {
-        return new Loader(activity, this.version);
+
+    public String getResourcePath(String imageFileName, String prefix) {
+        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        String path = "res/" + prefix;
+        if (dm.densityDpi <= 0.75f) {
+            path += "-ldpi";
+        }
+        if (dm.densityDpi > 0.75f && dm.densityDpi <= 1f) {
+            path += "-mdpi";
+        }
+        if (dm.densityDpi > 1f && dm.densityDpi <= 1.5f) {
+            path += "-hdpi";
+        }
+        if (dm.densityDpi > 1.5f && dm.densityDpi <= 2f) {
+            path += "-xhdpi";
+        }
+        if (dm.densityDpi > 2f && dm.densityDpi <= 3f) {
+            path += "-xxhdpi";
+        }
+        if (dm.densityDpi > 3f && dm.densityDpi <= 4f) {
+            path += "-xxxhdpi";
+        }
+
+        return path + '/' + imageFileName;
     }
 
+    public Bitmap getDrawableResource(String filePath) {
+        return getBitmapResource("drawable", filePath);
+    }
+
+    public Bitmap getBitmapResource(String prefix, String filePath) {
+        return getBitmap(getResourcePath(filePath, prefix));
+    }
+
+    public Bitmap getBitmap(String filePath) {
+        InputStream is = getInputStream(filePath);
+        return is != null ? BitmapFactory.decodeStream(is) : null;
+    }
+
+    public AssetFileDescriptor getAssetFileDescriptor(String assetPath) {
+        return expansionFile.getAssetFileDescriptor(assetPath);
+    }
+
+    public InputStream getInputStream(String filePath) {
+        try {
+            return expansionFile.getInputStream(filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public class Downloader implements IDownloaderClient {
         private IStub downloaderClientStub;
@@ -176,6 +236,29 @@ public class ExpansionFile {
             onComplete = onCompleteListener;
         }
 
+        public void setOnErrorListener(Runnable onErrorListener) {
+            onError = onErrorListener;
+        }
+
+        private void onProgress() {
+            if (onProgress != null) onProgress.run();
+        }
+
+        private void onComplete() {
+            if (expansionFile == null) {
+                try {
+                    expansionFile = APKExpansionSupport.getAPKExpansionZipFile(context, version, patchVersion);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (onComplete != null) onComplete.run();
+        }
+
+        private void onError() {
+            if (onError != null) onError.run();
+        }
+
 
         /**
          * Go through each of the APK Expansion files defined in the structure above
@@ -232,7 +315,7 @@ public class ExpansionFile {
             long percents = progress.mOverallProgress * 100 / progress.mOverallTotal;
             Log.v(LOG_TAG, "DownloadProgress:" + Long.toString(percents) + "%");
             progressDialog.setProgress((int) percents);
-            if (onProgress != null) onProgress.run();
+            onProgress();
         }
 
         @Override
@@ -268,73 +351,6 @@ public class ExpansionFile {
             }
         }
 
-    }
-
-    public class Loader {
-        private ZipResourceFile expansionFile = null;
-        private int density = 1;
-
-        public Loader(Activity a, int version) {
-            DisplayMetrics dm = a.getResources().getDisplayMetrics();
-            this.density = dm.densityDpi;
-            if (expansionFile == null) {
-                try {
-                    expansionFile = APKExpansionSupport.getAPKExpansionZipFile(a, version, 0);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        public String getResourcePath(String imageFileName, String prefix) {
-            String path = "res/" + prefix;
-            if (density <= 0.75f) {
-                path += "-ldpi";
-            }
-            if (density > 0.75f && density <= 1f) {
-                path += "-mdpi";
-            }
-            if (density > 1f && density <= 1.5f) {
-                path += "-hdpi";
-            }
-            if (density > 1.5f && density <= 2f) {
-                path += "-xhdpi";
-            }
-            if (density > 2f && density <= 3f) {
-                path += "-xxhdpi";
-            }
-            if (density > 3f && density <= 4f) {
-                path += "-xxxhdpi";
-            }
-
-            return path + '/' + imageFileName;
-        }
-
-        public Bitmap drawableResource(String filePath) {
-            return bitmapResource("drawable", filePath);
-        }
-
-        public Bitmap bitmapResource(String prefix, String filePath) {
-            return bitmap(getResourcePath(filePath, prefix));
-        }
-
-        public Bitmap bitmap(String filePath) {
-            InputStream is = inputStream(filePath);
-            return is != null ? BitmapFactory.decodeStream(is) : null;
-        }
-
-        public AssetFileDescriptor assetFileDescriptor(String assetPath) {
-            return expansionFile.getAssetFileDescriptor(assetPath);
-        }
-
-        public InputStream inputStream(String filePath) {
-            try {
-                return expansionFile.getInputStream(filePath);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
     }
 
 }
