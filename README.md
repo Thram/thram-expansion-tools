@@ -17,9 +17,7 @@ After 'git clone' the repo somewhere, these are the steps to follow to implement
 
 If everything goes ok, after the Gradle sync you should see your project like this:
 
-http://i260.photobucket.com/albums/ii2/Thram/Development/Step%205_zpsnemzjzio.png
-
-![step 5](http://i260.photobucket.com/albums/ii2/Thram/Development/Step%206_zpseetsv7ou.png)
+![step 5](http://i260.photobucket.com/albums/ii2/Thram/Development/Step%205_zpsnemzjzio.png)
 
 ### Step 3: Add the module as a dependency on your app's build.gradle.
 
