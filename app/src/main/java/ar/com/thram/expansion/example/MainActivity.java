@@ -18,9 +18,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final Activity activity = this;
         final ExpansionFile expansionFile = new ExpansionFile(getResources().getInteger(R.integer.obb_version), getResources().getInteger(R.integer.obb_size));
-        expansionDownloader = expansionFile.downloader(activity);
+        expansionDownloader = expansionFile.downloader(this);
         expansionDownloader.setOnCompleteListener(new Runnable() {
             @Override
             public void run() {

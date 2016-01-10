@@ -85,7 +85,7 @@ public class ExpansionFile {
     }
 
 
-    public String getResourcePath(String imageFileName, String prefix) {
+    public String getResourcePath(String fileName, String prefix) {
         DisplayMetrics dm = context.getResources().getDisplayMetrics();
         String path = "res/" + prefix;
         if (dm.densityDpi <= 0.75f) {
@@ -107,7 +107,7 @@ public class ExpansionFile {
             path += "-xxxhdpi";
         }
 
-        return path + '/' + imageFileName;
+        return path + '/' + fileName;
     }
 
     public Bitmap getDrawableResource(String filePath) {
